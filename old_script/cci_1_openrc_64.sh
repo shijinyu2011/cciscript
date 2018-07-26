@@ -1,0 +1,9 @@
+#!/bin/bash
+export OS_AUTH_URL=http://10.70.56.64:5000/v2.0
+export OS_TENANT_ID=45b6c7b14a1042688fdf0a8aeff7f0ba
+export OS_TENANT_NAME="CCI"
+export OS_USERNAME="cci"
+export OS_PASSWORD=cci
+export OS_REGION_NAME="RegionOne"
+if [ -z "$OS_REGION_NAME" ]; then unset OS_REGION_NAME; fi
+

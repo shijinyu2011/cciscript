@@ -1,0 +1,31 @@
+ipupb_net_id:cplane1_net
+vif_model:avp
+oam_service_ip_owner: /QNOMU
+
+number_of_cspu_nodes: 3
+number_of_uspu_nodes: 3
+number_of_eipu_nodes: 2
+cluster_id: 23
+best_effort_affinity: true
+cluster_identification:    165
+
+monitor_net_ips:    10
+PROTOCOL:https
+
+
+monitor_number_ips: 0
+number_of_external_interfaces: 6
+number_of_gateway_interfaces:  10
+interface_names:    cplane1,cplane2,uplane1,uplane2,uplane3,uplane4
+interface_traffic_type:  ,,uptraffic,uptraffic,uptraffic,uptraffic, , , , , , 
+interface_number_ips: 0,0,0,5,5,5
+
+cplane1_net_ips:     0
+cplane2_net_ips:     0
+uplane1_net_ips:     0
+uplane2_net_ips:    5
+uplane3_net_ips:    5
+uplane4_net_ips:    5
+
+_nokadmin_password: j1/3j+2yJ8O8KxHoLtuQtqg757D4lmxm
+

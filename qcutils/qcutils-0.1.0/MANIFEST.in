@@ -1,0 +1,4 @@
+include qcutilsrc
+include .gitignore
+graft test
+global-exclude .coverage

@@ -1,0 +1,8 @@
+.settings
+.project
+.pydevproject
+*.pyc
+PKG-INFO
+*.egg-info/*
+.coverage
+dist

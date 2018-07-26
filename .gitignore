@@ -1,0 +1,7 @@
+# compiled #
+*.pyc
+
+
+# log #
+*.log
+.project

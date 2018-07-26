@@ -1,0 +1,13 @@
+#!/bin/bash
+
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+echo "#==============================="
+echo "# This script has been removed"
+echo "#==============================="
+echo
+echo "New rc file...: '$DIR/qcutils-*.*.*/qcutilsrc'"
+echo "New interface.: '$DIR/qcutils.sh -h'"
+echo
+
+exit 1

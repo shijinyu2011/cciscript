@@ -1,0 +1,22 @@
+
+include ${VOBTAG}/SS_ILTools/tnsdl/makeoptions
+
+
+ifeq ($(EMBEDDED_IPALIGHT),true)
+TNSDLINC += -I${VOBTAG}/${FPIPLPRODUCT}/include
+else
+TNSDLINC += -I${VOBTAG}/product/include
+endif
+
+TNSDLINC += ${CEE_SACK_INC}
+
+DIRTNSDL := ${VOBTAG}/SS_ILTools/tnsdl
+DIRLIBGEN := $(VOBTAG)/SS_ILLibgen/lib/build
+
+
+export MKID_TTRAN = $(TTRAN)
+export MKID_TTRANFLAGS = $(TTRANFLAGS)
+
+
+export LINCOMTNSDL := ${ENV_ROOT}/SS_ILTools/tnsdl/lincomtnsdl -j 8
+

@@ -1,0 +1,30 @@
+# Configuration file for qcutils.
+# Put this file in your home directory with name .qcutilsrc
+# All keys are mandatory, but values can be empty for optional ones.
+
+# NSN-Intra username and password
+# These are passed around in plain text so it's recommended to keep this file
+# private and use restricted common accounts on public machines. 
+# The password is OPTIONAL - if not given the user shall be prompted for it.
+username = username
+password = 
+
+# Login details for the QC project:
+domain = MBB_LC
+project = VGP_LCC
+
+# The QC server url
+server_url = https://qc-prod.inside.nsn.com
+
+# Choose one of the XML API-URLs:
+# QC 11.5 QA: http://esvmn124.nsn-intra.net:85/QcXmlWebService.asmx?wsdl
+# QC 11.5 Prod backend 1: http://esvmp122.nsn-intra.net:85/QcXmlWebService/QcXmlWebService.asmx?wsdl
+# QC 11.5 Prod backend 2: http://esvmp123.nsn-intra.net:85/QcXmlWebService/QcXmlWebService.asmx?wsdl
+# QC 11.5 Prod loadbalancer: https://qc-api.inside.nsn.com/QcXmlWebService/QcXmlWebService.asmx?wsdl
+xml_api_url = https://qc-api.inside.nsn.com/QcXmlWebService/QcXmlWebService.asmx?wsdl
+
+# Proxy server (OPTIONAL). Can be useful when running this tool in R&D lab behind a firewall
+proxy = http://luxemburg.fp.nsn-rdnet.net:8080/
+
+# Other configuration
+test_case_search_root = \Subject\VGP&LCC

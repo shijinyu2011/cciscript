@@ -1,0 +1,17 @@
+#!/bin/bash
+branch=`git branch|grep "^\* "`
+if test $? -ne 0
+then
+  svn $*
+else
+  version=`git log -1|grep "^commit "|cut -d" " -f2`
+  auther=`git log -1|grep "^Author: "|cut -d" " -f2`
+  date=`git log -1|grep "^Date: "|sed -r "s/Date:\W*//g"`
+  subname=`git config -l|grep remote.origin.url|sed "s#.*/##g"|cut -d"." -f1`
+  echo "URL: https://svne1.access.nsn.com/isource/svnroot/$subname/branches/VirtualTrunk/$subname"
+  echo "Repository Root: https://svne1.access.nsn.com/isource/svnroot/$subname"
+  echo "Revision: ${version:0:8}"
+  echo "Last Changed Author: $auther"
+  echo "Last Changed Rev: ${version:0:8}"
+  echo "Last Changed Date: $date"
+fi

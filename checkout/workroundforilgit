@@ -1,0 +1,21 @@
+#!/bin/sh
+cuurentpath=`dirname $0`
+fullpath=`cd $cuurentpath && pwd`
+filename="$fullpath/svn-git"
+targetpath=$1
+
+sed -i "s#url=\$(svn info#url=\$($filename info#g" $targetpath/build/bin/genverinfo
+
+sed -i "s#url=\$(svn info .#url=\$($filename info .#g" $targetpath/fvntools/rmscripts/getvehistlabel
+sed -i "s#svn info \$PWD >\$tmpfile#$filename info \$PWD >\$tmpfile#g" $targetpath/fvntools/rmscripts/getvehistlabel              
+
+sed -i "s#url=\$(svn#url=\$($filename#g" $targetpath/fvntools/rmscripts/genverinfo
+
+sed -i "s#my @tmp=qx(svn info#my @tmp=qx($filename info#g" $targetpath/fvntools/rmscripts/genverinfo.pl
+#sed -i "s#url=\$(svn info#url=\$($filename info#g" $targetpath/product/bin/notinpath/build_rpm
+sed -i "s#url=\$(svn info#url=\$($filename info#g" $targetpath/flexiserver/bin/notinpath/build_rpm
+sed -i "s#url=\$(svn info#url=\$($filename info#g" $targetpath/fvntools/rmscripts/build_rpm
+sed -i "s#repo=\$(svn info#repo=\$($filename info#g" $targetpath/fvntools/rmscripts/build_rpm
+sed -i "s#svn info \.#$filename info \.#g" $targetpath/fvntools/rmscripts/build_rpm
+sed -i "s#basename \`svn info \.#basename \`$filename info \.#g" $targetpath/tools/make-devel-package.sh
+sed -i "s#URL=\$(dirname \`svn info \.#URL=\$(dirname \`$filename info \.#g" $targetpath/tools/make-devel-package.sh

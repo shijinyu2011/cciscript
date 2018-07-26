@@ -1,0 +1,718 @@
+heat_template_version: 2013-05-23
+
+description: Template for deploying CloudBTS, 1xOAM , 1xTRSL3, 1xL2PS
+
+parameters:
+  ext_net_id:
+    description: UUID of public network from where floating IP is requested. 
+    type: string
+    default: 97885aac-8205-4cac-83db-b6b2e7752747
+  cBTS-backhaul_net:
+    type: string
+    default: 5bf2d9cd-fedb-49b1-bd84-3ced3508ad60
+  cBTS-backhaul_net_cp:
+    type: string
+    default: 3d66aa34-8bbc-4fe2-a1d6-fb96f6fa563d
+  key_name:
+    type: string
+    description: Name of keypair to assign to servers
+    default: rcpkey
+  image_name:
+    type: string
+    description: Name of image to use for servers
+    default: com_4122
+
+  cluster_identification:
+    description: Cluster identification.
+    type: number
+    default: 1
+    constraints:
+      - range: { min: 1, max: 4095 }
+        description: (cluster_identification must be number <1-4095>)
+
+  flavor:
+    type: string
+    description: Flavor to use for servers
+    default: m1.medium
+  large_flavor:
+    type: string
+    description: Flavor to use for servers
+    default: m1.large
+  sn_flavor:
+    type: string
+    description: Flavor to use for storage nodes
+    default: m1.medium
+  ntp_servers:
+    type: string
+    description: Comma separated list of servers to synchronize to
+    default: 10.56.126.22
+  ntp_temp:
+    type: string
+    description: Comma separated list of servers to synchronize to
+    default: 169.254.0.4
+  dns_forwarders:
+    type: string
+    description: Comma separated list of servers to forward queries to
+    default: 10.56.126.31
+
+  tzregion:
+    type: string
+    description: Timezone region
+    default: Asia/Shanghai
+
+  internal_net_name:
+    type: string
+    description: >
+       Name of internal network to be created.
+       internal interface connects node to the cluster's internal network and
+       is mandatory for VGP's internal communication.
+    default: internal_net
+
+  internal_net_cidr:
+    type: string
+    description: Internal network address (CIDR notation)
+    default: 169.254.0.0/19
+    constraints:
+    - allowed_pattern: "169.254.0.0/19"
+      description: Internal network must be exactly this one.
+  internal_net_pool_start:
+    type: string
+    description: Start of internal network IP address allocation pool
+    default: 169.254.0.4
+    constraints:
+    - allowed_pattern: "169.254.0.4"
+      description: Internal network pool start must be exactly this one.
+  internal_net_pool_end:
+    type: string
+    description: End of internal network IP address allocation pool
+    default: 169.254.1.254
+    constraints:
+    - allowed_pattern: "169.254.1.254"
+      description: Internal network pool end must be exactly this one.
+
+  allowed_internal_net_addresses:
+    type: string
+    description: Subnet (CIDR) of the IP addresses allowed to be used in the internalnet in addition to node addresses.
+    default: 169.254.2.0/24
+
+
+  management_net_name:
+    type: string
+    description: >
+       Name of management network to be created.
+       management interface can be used for accessing guest (VGP node) from
+       host and vice versa.
+    default: management_net
+  management_net_cidr:
+    type: string
+    description: Management network address (CIDR notation)
+    default: 192.168.1.0/24
+  management_net_pool_start:
+    type: string
+    description: Start of management network IP address allocation pool
+    default: 192.168.1.100
+  management_net_pool_end:
+    type: string
+    description: End of management network IP address allocation pool
+    default: 192.168.1.111
+
+
+
+
+  internal_cp_net_name:
+    type: string
+    description: >
+       Name of internal cp network to be created.
+       internal interface connects node to the cluster's internal cp network and
+       is mandatory for BTS's internal cp communication.
+    default: internal_cp_net
+  internal_cp_net_cidr:
+    type: string
+    description: Internal network address (CIDR notation)
+    default: 10.5.6.0/24
+    constraints:
+    - allowed_pattern: "10.5.6.0/24"
+      description: Internal network must be exactly this one.
+  internal_cp_net_pool_start:
+    type: string
+    description: Start of internal network IP address allocation pool
+    default: 10.5.6.4
+    constraints:
+    - allowed_pattern: "10.5.6.4"
+      description: Internal network pool start must be exactly this one.
+  internal_cp_net_pool_end:
+    type: string
+    description: End of internal network IP address allocation pool
+    default: 10.5.6.254
+    constraints:
+    - allowed_pattern: "10.5.6.254"
+      description: Internal network pool end must be exactly this one.
+
+  allowed_internal_cp_net_addresses:
+    type: string
+    description: Subnet (CIDR) of the IP addresses allowed to be used in the internalnet in addition to node addresses.
+    default: 10.5.6.0/24
+
+
+
+
+  internal_up_net_name:
+    type: string
+    description: >
+       Name of internal network to be created.
+       internal interface connects node to the cluster's internal network and
+       is mandatory for VGP's internal communication.
+    default: internal_net
+  internal_up_net_cidr:
+    type: string
+    description: Internal network address (CIDR notation)
+    default: 10.5.5.0/24
+    constraints:
+    - allowed_pattern: "10.5.5.0/24"
+      description: Internal network must be exactly this one.
+  internal_up_net_pool_start:
+    type: string
+    description: Start of internal network IP address allocation pool
+    default: 10.5.5.4
+    constraints:
+    - allowed_pattern: "10.5.5.4"
+      description: Internal network pool start must be exactly this one.
+  internal_up_net_pool_end:
+    type: string
+    description: End of internal network IP address allocation pool
+    default: 10.5.5.254
+    constraints:
+    - allowed_pattern: "10.5.5.254"
+      description: Internal network pool end must be exactly this one.
+
+  allowed_internal_up_net_addresses:
+    type: string
+    description: Subnet (CIDR) of the IP addresses allowed to be used in the internalnet in addition to node addresses.
+    default: 10.5.5.0/24
+
+
+
+  mgmt_traffic_net_name:
+    type: string
+    description: >
+       Name of management network to be created.
+       management interface can be used for accessing guest (VGP node) from
+       host and vice versa.
+    default: mgmt_traffic_net
+  mgmt_traffic_net_cidr:
+    type: string
+    description: Management network address (CIDR notation)
+    default: 10.7.0.0/24
+  mgmt_traffic_net_pool_start:
+    type: string
+    description: Start of management network IP address allocation pool
+    default: 10.7.0.100
+  mgmt_traffic_net_pool_end:
+    type: string
+    description: End of management network IP address allocation pool
+    default: 10.7.0.111
+
+  storage_user_config:
+    description: Storage user configuration for Config
+    type: string
+    default: storage-user-config:169.254.0.4:/config;/mnt/config;nfs4;rw,noac,nordirplus,nolock
+  storage_user_mstate:
+    description: Storage user configuration for Mstate
+    type: string
+    default: storage-user-mstate:169.254.0.4:/mstate;/mnt/mstate;nfs4;rw,noac,nordirplus,nolock
+  storage_user_log:
+    description: Storage user configuration for Log
+    type: string
+    default: storage-user-log:169.254.0.4:/log;/mnt/log;nfs4;rw,noac,nordirplus,nolock
+  storage_user_services:
+    description: Storage user configuration for Services
+    type: string
+    default: storage-user-services:169.254.0.4:/services;/mnt/services;nfs4;rw,noac,nordirplus,nolock
+  storage_user_home:
+    description: Storage user configuration for Home
+    type: string
+    default: storage-user-home:169.254.0.4:/home;/home;nfs4;rw,noac,nordirplus,nolock
+  storage_user_export:
+    description: Storage user configuration for export
+    type: string
+    default: storage-user-export:169.254.0.4:/export;/mnt/export;nfs4;rw,noac,nordirplus,nolock
+
+  OAM_availability_zone:
+    description: UI-0 availability zone.
+    type: string
+    default: "nova"
+  TRSL3_availability_zone:
+    description: DB-0 availability zone.
+    type: string
+    default: "nova"
+  L2PS_availability_zone:
+    description: LB-0 availability zone.
+    type: string
+    default: "nova"
+
+
+  additional_ip_info:
+    description: ip-info for additional interfaces.
+    type: string
+    default: ""
+
+
+
+  OAM_internal_cp_ip:
+    description: ip address for oms port on OAM internal cp node
+    type: string
+    default: 169.254.1.4
+
+  OAM_management_ip:
+    description: ip address for oms port on OAM management ip node
+    type: string
+    default: 192.168.1.101
+
+  TRSL3_internel_cp_ip:
+    description: ip address for oms port on TRSL3 internal cp node
+    type: string
+    default: 169.254.1.5
+  TRSL3_internel_up_ip:
+    description: ip address for oms port on TRSL3 internal up node
+    type: string
+    default: 10.5.5.5
+  TRSL3_core_cp_ip:
+    description: ip address for oms port on TRSL3 core cp node
+    type: string
+    default: 10.63.86.21
+  TRSL3_core_up_ip:
+    description: ip address for oms port on TRSL3 core up node
+    type: string
+    default: 10.63.85.201  
+
+
+  L2PS_internel_cp_ip:
+    description: ip address for oms port on L2PS internal cp node
+    type: string
+    default: 169.254.1.6
+  L2PS_internel_up_ip:
+    description: ip address for oms port on L2PS internal up node
+    type: string      
+    default: 10.5.5.6
+
+  deployment:
+    type: string
+    description: Deployment name
+    default: create_vBTS.sh
+
+resources:
+
+  internal_net:
+    type: OS::Neutron::Net
+    properties:
+      name: { get_param: internal_net_name }
+
+  internal_net_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: internal_net }
+      cidr: { get_param: internal_net_cidr }
+      gateway_ip: Null
+      enable_dhcp: False
+      allocation_pools:
+        - start: { get_param: internal_net_pool_start }
+          end: { get_param: internal_net_pool_end }
+
+
+  management_net:
+    type: OS::Neutron::Net
+    properties:
+      name: { get_param: management_net_name }
+
+  management_net_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: management_net }
+      cidr: { get_param: management_net_cidr }
+      allocation_pools:
+        - start: { get_param: management_net_pool_start }
+          end: { get_param: management_net_pool_end }
+
+
+  internal_cp_net:
+    type: OS::Neutron::Net
+    properties:
+      name: { get_param: internal_cp_net_name }
+
+
+  internal_cp_net_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: internal_cp_net }
+      cidr: { get_param: internal_cp_net_cidr }
+      gateway_ip: Null
+      enable_dhcp: False
+      allocation_pools:
+        - start: { get_param: internal_cp_net_pool_start }
+          end: { get_param: internal_cp_net_pool_end }
+
+
+  internal_up_net:
+    type: OS::Neutron::Net
+    properties:
+      name: "internal_up_net"
+
+  internal_up_net_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: internal_up_net }
+      cidr: { get_param: internal_up_net_cidr }
+      gateway_ip: Null
+      enable_dhcp: False
+      allocation_pools:
+        - start: { get_param: internal_up_net_pool_start }
+          end: { get_param: internal_up_net_pool_end }
+
+  mgmt_traffic_net:
+    type: OS::Neutron::Net
+    properties:
+      name: { get_param: mgmt_traffic_net_name }
+
+  mgmt_traffic_net_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      network_id: { get_resource: mgmt_traffic_net }
+      cidr: { get_param: mgmt_traffic_net_cidr }
+      allocation_pools:
+        - start: { get_param: mgmt_traffic_net_pool_start }
+          end: { get_param: mgmt_traffic_net_pool_end }
+
+  router:
+    type: OS::Neutron::Router
+    properties:
+      name: managementrouter
+
+  router_gateway:
+    type: OS::Neutron::RouterGateway
+    properties:
+      network_id: { get_param: ext_net_id } 
+      router_id: { get_resource: router }
+
+  management_router_interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_resource: router }
+      subnet_id: { get_resource: management_net_subnet }
+
+
+  router_gateway:
+    type: OS::Neutron::RouterGateway
+    properties:
+      network_id: { get_param: ext_net_id } 
+      router_id: { get_resource: router }
+
+  management_router_interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_resource: router }
+      subnet_id: { get_resource: management_net_subnet }
+
+  mgmt_traffic_router:
+    type: OS::Neutron::Router
+    properties:
+      name: mgmttrafficrouter
+
+  mgmt_traffic_router_interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_resource: mgmt_traffic_router }
+      subnet_id: { get_resource: mgmt_traffic_net_subnet }
+
+  Disk_Config_UI0:
+    type: OS::Cinder::Volume
+    properties:
+      size: 5
+
+  Disk_Log_UI0:
+    type: OS::Cinder::Volume
+    properties:
+      size: 5
+
+  Disk_Mstate_UI0:
+    type: OS::Cinder::Volume
+    properties:
+      size: 3
+
+  Disk_Services_UI0:
+    type: OS::Cinder::Volume
+    properties:
+      size: 2
+ 
+  Disk_DB_DB0:
+    type: OS::Cinder::Volume
+    properties: 
+      size: 4  	
+
+  Disk_Home_UI0:
+    type: OS::Cinder::Volume
+    properties:
+      size: 2
+
+  Disk_Export_UI0:
+    type: OS::Cinder::Volume
+    properties:
+      size: 5
+
+  OAM_management_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: management_net }
+      fixed_ips:
+        - subnet_id: { get_resource: management_net_subnet }      
+
+  OAM_internal_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: internal_net }
+      fixed_ips:
+        - subnet_id: { get_resource: internal_net_subnet } 
+
+  OAM_mgmt_traffic_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: mgmt_traffic_net }
+
+  OAM_internal_cp_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: internal_cp_net }
+      fixed_ips:
+        - ip_address: 10.5.6.3
+
+  OAM-0:
+    type: OS::Nova::Server
+    properties:
+      name: OAM-0
+      image: { get_param: image_name }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      availability_zone: { get_param: OAM_availability_zone }
+      networks:
+        - port: { get_resource: OAM_management_port }
+        - port: { get_resource: OAM_internal_port }
+        - port: { get_resource: OAM_mgmt_traffic_port }
+        - port: { get_resource: OAM_internal_cp_port }
+      block_device_mapping:
+        - { volume_id: { get_resource: Disk_Config_UI0 }, device_name: "vdb" }
+        - { volume_id: { get_resource: Disk_Mstate_UI0 }, device_name: "vdc" }
+        - { volume_id: { get_resource: Disk_Log_UI0 }, device_name: "vdd" }
+        - { volume_id: { get_resource: Disk_Services_UI0 }, device_name: "vde" }
+        - { volume_id: { get_resource: Disk_Home_UI0 }, device_name: "vdf" }
+        - { volume_id: { get_resource: Disk_Export_UI0 }, device_name: "vdg" }
+      user_data:
+        str_replace:
+          template: |
+           properties:
+            - hostname:OAM-0
+            - instance-type:OAMNodeType
+            - ip-info:management,,$management_mac,|internal,169.254.0.4,$internal_mac,19|magmt_traffic,,$magmt_traffic_mac,|internal_cp,10.5.6.4,$internal_cp_mac,24|$additional_ip_info
+            - subnet-info:internalnet,$internalnet|fabricnet,169.254.32.0/19|internalfwd,169.254.80.0/20
+            - free-internalnet-ip-range:169.254.2.4-169.254.2.254
+            - free-fabricnet-ip-range:169.254.34.4-169.254.34.254
+            - time-zone:$timezone
+            - deployment-name:$dep
+            - storage-provider-config:/mnt/config;ext4;/dev/vdb
+            - storage-provider-mstate:/mnt/mstate;ext4;/dev/vdc
+            - storage-provider-log:/mnt/log;ext4;/dev/vdd
+            - storage-provider-services:/mnt/services;ext4;/dev/vde
+            - storage-provider-home:/home;ext4;/dev/vdf
+            - storage-provider-export:/mnt/export;ext4;/dev/vdg
+            - cluster-id:vBTS-$cid
+            - ntp-servers:$ntp_servers
+            - dns-forwarders:$dns_forwarders
+            - installation-node:true
+           configuration:
+            - nodes.all.cluster_engine.quorate_monitor.state:disabled
+            - nodes.all.db.db_service.state:disable
+          params:
+            $management_mac: { get_attr: [OAM_management_port, mac_address] }
+            $internal_mac:   { get_attr: [OAM_internal_port, mac_address] }
+            $magmt_traffic_mac: { get_attr: [OAM_mgmt_traffic_port, mac_address] }
+            $internal_cp_mac:   { get_attr: [OAM_internal_cp_port, mac_address] }
+            $additional_ip_info: { get_param: additional_ip_info }
+            $internalnet:    { get_param: internal_net_cidr }
+            $dep:            { get_param: deployment }
+            $timezone:       { get_param: tzregion }
+            $cid:            { get_param: cluster_identification }
+            $ntp_servers:    { get_param: ntp_servers }
+            $dns_forwarders: { get_param: dns_forwarders }
+
+  TRSL3_management_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: management_net }
+
+  TRSL3_internal_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: internal_net }
+      fixed_ips:
+        - ip_address: 169.254.0.5
+
+
+  TRSL3_internal_cp_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: internal_cp_net }
+      fixed_ips:
+        - ip_address: 10.5.6.5
+
+  TRSL3_internal_up_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: internal_up_net }
+      fixed_ips:
+        - ip_address: 10.5.5.5
+  
+  TRSL3_core_up_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: cBTS-backhaul_net }
+
+  TRSL3_core_cp_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: cBTS-backhaul_net_cp }
+
+  TRSL3-0:
+    type: OS::Nova::Server
+    properties:
+      name: TRSL3-0
+      image: { get_param: image_name }
+      flavor: { get_param: large_flavor }
+      key_name: { get_param: key_name }
+      availability_zone: { get_param: TRSL3_availability_zone }
+      networks:
+        - port: { get_resource: TRSL3_management_port  }
+        - port: { get_resource: TRSL3_internal_port }
+        - port: { get_resource: TRSL3_internal_cp_port  }
+          vif-model: avp
+        - port: { get_resource: TRSL3_internal_up_port }
+          vif-model: avp
+        - port: { get_resource: TRSL3_core_cp_port }
+          vif-model: avp
+        - port: { get_resource: TRSL3_core_up_port }
+          vif-model: avp
+      user_data:
+        str_replace:
+          template: |
+           properties:
+            - hostname:TRSL3-0
+            - instance-type:TRSL3NodeType
+            - ip-info:management,,$management_mac,|internal,169.254.0.5,$internal_mac,19|internal_cp,,$internal_cp_mac,|internal_up,10.5.6.5,$internal_up_mac,24|core_cp,$core_cp_ip,$core_cp_mac,24|core_up,$core_up_ip,$core_up_mac,24|$additional_ip_info
+            - time-zone:$timezone
+            - deployment-name:$dep
+            - $storage_u_config
+            - $storage_u_mstate
+            - $storage_u_log
+            - $storage_u_services
+            - $storage_u_home
+            - $storage_u_export
+            - cluster-id:vBTS-$cid
+            - ntp-servers:$ntp_servers
+            - dns-forwarders:$dns_forwarders
+          params:
+            $management_mac:     { get_attr: [TRSL3_management_port, mac_address] }
+            $internal_mac:       { get_attr: [TRSL3_internal_port, mac_address] }
+            $internal_cp_mac:     { get_attr: [TRSL3_internal_cp_port, mac_address] }
+            $internal_up_mac:     { get_attr: [TRSL3_internal_up_port, mac_address] }
+            $core_cp_mac:            { get_attr: [TRSL3_core_cp_port, mac_address] }
+            $core_cp_ip:             { get_param: TRSL3_core_cp_ip }
+            $core_up_mac:            { get_attr: [TRSL3_core_up_port, mac_address] }
+            $core_up_ip:             { get_param: TRSL3_core_up_ip }
+            $additional_ip_info: { get_param: additional_ip_info }
+            $dep:                { get_param: deployment}
+            $timezone:           { get_param: tzregion }
+            $storage_u_config:   { get_param: storage_user_config }
+            $storage_u_mstate:   { get_param: storage_user_mstate }
+            $storage_u_log:      { get_param: storage_user_log }
+            $storage_u_services: { get_param: storage_user_services }
+            $storage_u_home:     { get_param: storage_user_home }
+            $storage_u_export:     { get_param: storage_user_export }
+            $cid:                { get_param: cluster_identification }
+            $ntp_servers:        { get_param: ntp_temp }
+            $dns_forwarders:     { get_param: dns_forwarders }
+
+
+  L2PS_management_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: management_net }
+
+  L2PS_internal_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: internal_net }
+      fixed_ips:
+        - ip_address: 169.254.0.6
+
+
+  L2PS_internal_cp_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: internal_cp_net }
+      fixed_ips:
+        - ip_address: 10.5.6.6
+
+  L2PS_internal_up_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: internal_up_net }
+      fixed_ips:
+        - ip_address: 10.5.5.6
+
+  L2PS-0:
+    type: OS::Nova::Server
+    properties:
+      name: L2PS-0
+      image: { get_param: image_name }
+      flavor: { get_param: large_flavor }
+      key_name: { get_param: key_name }
+      availability_zone: { get_param: L2PS_availability_zone }  
+      networks:
+        - port: { get_resource: L2PS_management_port  }
+        - port: { get_resource: L2PS_internal_port }
+        - port: { get_resource: L2PS_internal_cp_port }
+        - port: { get_resource: L2PS_internal_up_port }
+      block_device_mapping:
+        - { volume_id: { get_resource: Disk_DB_DB0 }, device_name: "vdb" } 
+      user_data:
+        str_replace:
+          template: |
+           properties:
+            - hostname:L2PS-0
+            - instance-type:L2PSNodeType
+            - ip-info:management,,$management_mac,|internal,169.254.0.6,$internal_mac,19|internal_cp,,$internal_cp_mac,|internal_up,10.5.6.7,$internal_up_mac,24|$additional_ip_info
+            - time-zone:$timezone
+            - deployment-name:$dep
+            - $storage_u_config
+            - $storage_u_mstate
+            - $storage_u_log
+            - $storage_u_services
+            - $storage_u_home
+            - $storage_u_export
+            - cluster-id:vBTS-$cid
+            - ntp-servers:$ntp_servers
+            - dns-forwarders:$dns_forwarders
+          params:
+            $management_mac:     { get_attr: [L2PS_management_port, mac_address] }
+            $internal_mac:       { get_attr: [L2PS_internal_port, mac_address] }
+            $internal_cp_mac:     { get_attr: [L2PS_internal_cp_port, mac_address] }
+            $internal_up_mac:     { get_attr: [L2PS_internal_up_port, mac_address] }
+            $additional_ip_info: { get_param: additional_ip_info }
+            $dep:                { get_param: deployment}
+            $timezone:           { get_param: tzregion }
+            $storage_u_config:   { get_param: storage_user_config }
+            $storage_u_mstate:   { get_param: storage_user_mstate }
+            $storage_u_log:      { get_param: storage_user_log }
+            $storage_u_services: { get_param: storage_user_services }
+            $storage_u_home:     { get_param: storage_user_home }
+            $storage_u_export:     { get_param: storage_user_export }
+            $cid:                { get_param: cluster_identification }
+            $ntp_servers:        { get_param: ntp_temp }
+            $dns_forwarders:     { get_param: dns_forwarders }
